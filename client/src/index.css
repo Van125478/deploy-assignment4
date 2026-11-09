@@ -1,0 +1,29 @@
+body {
+  background: #fff;
+  color: #212529;
+}
+
+.auth-card {
+  width: 100%;
+  max-width: 420px;
+}
+
+.nav-link {
+  color: #6c757d;
+}
+
+.nav-link.active,
+.nav-link:hover {
+  color: #212529;
+}
+
+.quiz-wrap {
+  max-width: 680px;
+  margin: 3rem auto 0;
+  text-align: center;
+}
+
+.quiz-options {
+  display: inline-block;
+  text-align: left;
+}
