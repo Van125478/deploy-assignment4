@@ -1,4 +1,5 @@
 const express = require("express");
+const fs = require("fs");
 const path = require("path");
 const cookieParser = require("cookie-parser");
 const logger = require("morgan");
@@ -17,7 +18,14 @@ require("./authenticate");
 
 const app = express();
 
-connectDB();
+app.use(async (req, res, next) => {
+  try {
+    await connectDB();
+    next();
+  } catch (error) {
+    next(error);
+  }
+});
 
 app.use(cors());
 app.use(logger("dev"));
@@ -26,25 +34,29 @@ app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());
 app.use(passport.initialize());
 
-app.get("/", (req, res) => {
-  res.json({
-    message: "Assignment 3 User Authentication API is running",
-    endpoints: {
-      signup: "POST /users/signup",
-      login: "POST /users/login",
-      users: "GET /users (admin)",
-      quizzes: "/quizzes",
-      questions: "/questions",
-      articles: "/articles",
-    },
-  });
+app.get("/health", (req, res) => {
+  res.json({ status: "ok" });
 });
 
-app.use(express.static(path.join(__dirname, "public")));
 app.use("/users", usersRouter);
 app.use("/quizzes", quizRoutes);
 app.use("/questions", questionRoutes);
 app.use("/articles", articleRoutes);
+
+const clientBuild = [
+  path.join(__dirname, "client", "dist"),
+  path.join(__dirname, "..", "client", "dist"),
+  path.join(process.cwd(), "client", "dist"),
+].find((folder) => fs.existsSync(path.join(folder, "index.html")));
+const clientIndex = clientBuild ? path.join(clientBuild, "index.html") : "";
+
+
+if (clientIndex && fs.existsSync(clientIndex)) {
+  app.use(express.static(clientBuild));
+  app.get(/^(?!\/(?:users|quizzes|questions|articles|health)(?:\/|$)).*/, (req, res) => {
+    res.sendFile(clientIndex);
+  });
+}
 
 app.use((req, res, next) => {
   const err = new Error("Not Found");
